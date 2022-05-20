@@ -1,1 +1,1872 @@
-{"apiVersion":"0.1","apis":[{"description":"Handler that exposes query and creation methods for Alert objects.","operations":[{"errorResponses":[{"code":200,"reason":"Success"},{"code":304,"reason":"Resource has not changed (If-None-Match)"},{"code":400,"reason":"Invalid sort key or sort direction."},{"code":401,"reason":"Invalid user session"},{"code":403,"reason":"User does not have required permission"},{"code":500,"reason":"Internal server error"}],"httpMethod":"GET","nickname":"AlertListHandler_get","notes":"<div class=\"markdown\">Examples:\n\nRetrieve list of alerts with keywords \"fire\"\n\n`GET /alert?keywords=fire`\n\nRetrieve list of alerts near point (10, 10)\n\n`GET /alert?geom={\"type\":\"Circle\",\"coordinates\":[10,10],\"radius\":0.5}`\n\n\nRequires permissions: ['ALERT_READ']</div>","parameters":[{"allowMultiple":false,"dataType":"string","defaultValue":500,"description":"Maximum number of items to return.","name":"limit","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Index of the first item to return.","name":"offset","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"List of item URIs to query instead of querying all items.","name":"item_uris","paramType":"query","required":false},{"allowMultiple":false,"dataType":"boolean","description":"When set, fill in the `total` field in the response body. The `total` field indicates how many records matched the query, disregarding the limit and offset.To reduce computation costs, the maximum value for the `total` will be limited to to `limit + offset` unless a `max_total` parameter value is also included.","name":"include_total","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Sets the maximum value for the `total` field when the `include_total` parameter is also set on the query ","name":"max_total","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"\n                             Keyword filter for searching an alert's title,\n                             description, source name and types.\n                             ","name":"keyword","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Filter on read state. (True, true, 1, False, false, 0)","name":"is_read","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Filter on archived state. (True, true, 1, False, false, 0)","name":"is_archived","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Geospatial filter.\n      Geometery is passed in and out using GeoJSON with the Circle type extension.\n\n      http://geojson.org/geojson-spec.html\n      https://github.com/GeoJSONWG/geojson-spec/wiki/Proposal---Circles-and-Ellipses-Geoms\n      ","name":"region","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Filter on alert type.","name":"alert_types","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Alerts whose end time is greater or equal to the given time. Datetime is represented in iso8601 format. (ex: '2011-06-24T09:55:08.110000Z') ","name":"ends_after","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Alerts whose begin time is less than the given time. Datetime is represented in iso8601 format. (ex: '2011-06-24T09:55:08.110000Z') ","name":"begins_before","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Alerts that have been modified since the given time. Datetime is represented in iso8601 format. (ex: '2011-06-24T09:55:08.110000Z') ","name":"modified_since","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Alerts with priority less than this priority.","name":"max_priority","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Alerts with priority greater than or equal to\n                                           this priority.","name":"min_priority","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Data group URIs to restrict results to.","name":"data_group_uris","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Keyword filter for an alert's author.","name":"author","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Keyword filter for an alert's\n                                                  source name.","name":"source","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Keyword filter for an alert's\n                                                  source id.","name":"source_id","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Keyword filter for an alert's\n                                                  id in the source system.","name":"source_alert_id","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"","name":"filter_profile_uris","paramType":"query","required":false},{"allowMultiple":false,"allowableValues":{"valueType":"LIST","values":["asc","desc"]},"dataType":"string","defaultValue":"asc","description":null,"name":"sort_dir","paramType":"query","required":false},{"allowMultiple":false,"allowableValues":{"valueType":"LIST","values":["title","source_name","source_alert_id","begin_time","end_time","priority","read_state"]},"dataType":"string","description":null,"name":"sort_key","paramType":"query","required":false},{"allowMultiple":false,"allowableValues":{"valueType":"LIST","values":["title","source_name","source_alert_id","begin_time","end_time","priority","read_state"]},"dataType":"string","description":null,"name":"secondary_sort_key","paramType":"query","required":false},{"allowMultiple":false,"allowableValues":{"valueType":"LIST","values":["asc","desc"]},"dataType":"string","description":null,"name":"secondary_sort_dir","paramType":"query","required":false},{"allowMultiple":false,"dataType":"boolean","description":"If true, a region filter will also return alerts that have no location set.","name":"include_locationless","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"The ETag header value from previous request","name":"If-None-Match","paramType":"header","required":false}],"responseClass":"void","summary":"Return the list of AlertResource objects that match the provided filters."},{"errorResponses":[{"code":201,"reason":"New resource created, URI in Location response header."},{"code":400,"reason":"Invalid resource specified - cannot save to database."},{"code":401,"reason":"Invalid user session"},{"code":403,"reason":"User does not have required permission"},{"code":500,"reason":"Internal server error"}],"httpMethod":"POST","nickname":"AlertListHandler_post","notes":"<div class=\"markdown\">POST'ing to this URI creates a new alert containing the data specified.\nThe format for the body of the POST is identical to the GET response but any field\nmay be omited.\n\nNOTE: If setting `priority`, then `priority_override` must be set `true`.\n\nExample:\n\n```javascript\n{\n   \"__type\": \"alerts.alert_resource\",\n   \"title\": \"Suspicious Package\",\n   \"description\": \"There was a report of a suspicious package.\",\n   \"author\": \"John Smith\",\n   \"begin_time\": \"2014-09-22T09:30:00Z\",\n   \"end_time\": \"2014-09-22T09:30:00Z\",\n   \"source_id\": \"unique_id_for_feed\",\n   \"source_name\": \"Alert Feed A\",\n   \"source_alert_id\": \"unique_id_for_alert\",\n   \"priority\": 0,\n   \"priority_override\": false,\n   \"location\": {\n      \"__type\": \"location_type.location\",\n      \"geom\": {\n         \"coordinates\": [10.0,0.0],\n         \"type\": \"Point\"\n      },\n      \"title\": \"45th and Oak St\"\n   },\n   \"types\": [\n      {\"uri\": \"/alert_type/00000000-0000-0000-0000-000000000008\"}\n   ]\n}\n```\n\n\nRequires permissions: ['ALERT_CREATE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Body of the request.  Must contain the JSON for a AlertResource object.  See the GET handler for an example of the format of the body.","name":"body","paramType":"body","required":true}],"responseClass":"void","summary":"Creates a new AlertResource object for the given data."}],"path":"/alert"},{"description":"\n   Archives all alerts the user has access to.\n   ","operations":[{"errorResponses":[{"code":401,"reason":"Invalid user session"},{"code":403,"reason":"User does not have required permission"},{"code":500,"reason":"Internal server error"}],"httpMethod":"POST","nickname":"ArchiveAllHandler_post","notes":"<div class=\"markdown\">Body must be of the form ``{\"item_uris\" : [list of alert uris...]}``.\n\n\nRequires permissions: ['ALERT_ARCHIVE_ALL']</div>","parameters":[],"responseClass":"void","summary":"Archive a specific set of alerts."}],"path":"/alert/archive_all"},{"description":"\n   Alert feed endpoint used for 3rd party integrations. It handles a stream of\n   alert data which could be for an existing alert or a new alert. For each\n   resource that we receive we first check to see if there is an existing alert\n   with a matching source and source ID.\n   ","operations":[{"errorResponses":[{"code":200,"reason":"Existing alert was updated"},{"code":201,"reason":"New alert was created"},{"code":401,"reason":"Invalid user session"},{"code":403,"reason":"User does not have required permission"},{"code":500,"reason":"Internal server error"}],"httpMethod":"POST","nickname":"AlertFeedHandler_post","notes":"<div class=\"markdown\">This endpoint is used for integrating external alert feeds. Alerts can\nbe sent without taking into account if they are already known. If an\nexisting alert is found with a matching source_id and source_alert_id it\nis updated. Otherwise a new alert is created. In both cases the response\nLocation header is set to the relative canonical alert URI. The source_name\nvalue can be specified to give the source a human readable name.\n\nNOTE: The source_id, source_name and source_alert_id fields are required.\nNOTE: If setting priority, then priority_override must be set true.\n\nExample:\n\n```javascript\n{\n   \"__type\": \"alerts.alert_resource\",\n   \"title\": \"Suspicious Package\",\n   \"description\": \"There was a report of a suspicious package.\",\n   \"author\": \"John Smith\",\n   \"begin_time\": \"2014-09-22T09:30:00Z\",\n   \"end_time\": \"2014-09-22T09:30:00Z\",\n   \"source_id\": \"some_data_feed\",\n   \"source_name\": \"Some Data Feed\",\n   \"source_alert_id\": \"123456\",\n   \"priority\": 0,\n   \"priority_override\": false,\n   \"location\": {\n      \"__type\": \"location_type.location\",\n      \"geom\": {\n         \"coordinates\": [10.0,0.0],\n         \"type\": \"Point\"\n      },\n      \"title\": \"45th and Oak St\"\n   },\n   \"types\": [\n      {\"uri\": \"/alert_type/00000000-0000-0000-0000-000000000008\"}\n   ]\n}\n```\n\n\nRequires permissions: ['ALERT_CREATE', 'ALERT_WRITE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Body of the request.","name":"body","paramType":"body","required":true}],"responseClass":"void","summary":"Add or update an alert depending on its source_id and source_alert_id."}],"path":"/alert/feed"},{"description":"Handler that exposes update and deletion methods for Alert objects.","operations":[{"errorResponses":[{"code":200,"reason":"Success"},{"code":304,"reason":"Resource has not changed (If-None-Match)"},{"code":401,"reason":"User is not logged in."},{"code":403,"reason":"User does not have the required permissions."},{"code":404,"reason":"Invalid resource specified - cannot be found."},{"code":500,"reason":"Internal server error"}],"httpMethod":"GET","nickname":"AlertHandler_get","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_READ']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_id' in path.","name":"alert_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"The ETag header value from previous request","name":"If-None-Match","paramType":"header","required":false}],"responseClass":"void","summary":"Return the AlertResource object for this URI."},{"errorResponses":[{"code":200,"reason":"Success"},{"code":400,"reason":"Bad format in request."},{"code":401,"reason":"User is not logged in."},{"code":403,"reason":"User does not have the required permissions."},{"code":404,"reason":"Invalid resource specified - cannot be found."},{"code":500,"reason":"Internal server error"}],"httpMethod":"PUT","nickname":"AlertHandler_put","notes":"<div class=\"markdown\">Overrides all fields for the given alert.\n\nNOTE: If setting `priority`, then `priority_override` must be set `true`.\n\nExample:\n\n```javascript\n{\n   \"__type\": \"alerts.alert_resource\",\n   \"title\": \"Suspicious Package\",\n   \"description\": \"There was a report of a suspicious package.\",\n   \"author\": \"John Smith\",\n   \"begin_time\": \"2014-09-22T09:30:00Z\",\n   \"end_time\": \"2014-09-22T09:30:00Z\",\n   \"source_id\": \"unique_id_for_feed\",\n   \"source_name\": \"Alert Feed A\",\n   \"source_alert_id\": \"unique_id_for_alert\",\n   \"priority\": 0,\n   \"priority_override\": false,\n   \"location\": {\n      \"__type\": \"location_type.location\",\n      \"geom\": {\n         \"coordinates\": [10.0,0.0],\n         \"type\": \"Point\"\n      },\n      \"title\": \"45th and Oak St\"\n   },\n   \"types\": [\n      {\"uri\": \"/alert_type/00000000-0000-0000-0000-000000000008\"}\n   ]\n}\n```\n\n\nRequires permissions: ['ALERT_WRITE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_id' in path.","name":"alert_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Body of the request.  Must contain the JSON for a AlertResource object.  See the GET handler for an example of the format of the body.","name":"body","paramType":"body","required":true}],"responseClass":"void","summary":"Overwrite the existing AlertResource object with the given data."},{"errorResponses":[{"code":200,"reason":"Success"},{"code":400,"reason":"Bad format in request."},{"code":401,"reason":"User is not logged in."},{"code":403,"reason":"User does not have the required permissions."},{"code":404,"reason":"Invalid resource specified - cannot be found."},{"code":500,"reason":"Internal server error"}],"httpMethod":"PATCH","nickname":"AlertHandler_patch","notes":"<div class=\"markdown\">Only fields that are modified should be included.\n\nNOTE: If setting `priority`, then `priority_override` must be set `true`.\n\nExample:\n\n```javascript\n{\n   \"title\": \"New Title\",\n   \"description\": \"Updated description\"\n}\n```\n\n\nRequires permissions: ['ALERT_WRITE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_id' in path.","name":"alert_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Body of the request.  Must contain partial JSON for a AlertResource object.  See the GET handler for an example of the format of the body.","name":"body","paramType":"body","required":true}],"responseClass":"void","summary":"Update the existing AlertResource object with the given dictionary."},{"errorResponses":[{"code":200,"reason":"Success"},{"code":401,"reason":"User is not logged in."},{"code":403,"reason":"User does not have the required permissions."},{"code":404,"reason":"Invalid resource specified - cannot be found."},{"code":500,"reason":"Internal server error"}],"httpMethod":"DELETE","nickname":"AlertHandler_delete","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_DELETE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_id' in path.","name":"alert_id","paramType":"path","required":true}],"responseClass":"void","summary":"Delete the existing AlertResource object with the given URI."}],"path":"/alert/{alert_id}"},{"description":"\n   Handler that provides access to an alert's attachments.\n   ","operations":[{"errorResponses":[{"code":304,"reason":"Resource has not changed (If-None-Match)"},{"code":401,"reason":"Invalid user session"},{"code":403,"reason":"User does not have required permission"},{"code":500,"reason":"Internal server error"}],"httpMethod":"GET","nickname":"AttachmentListHandler_get","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_READ', 'DATA_STORE_READ']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_id' in path.","name":"alert_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Matching md5sum for the request objects","name":"md5sum","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Offset the starting position of the search","name":"offset","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Limit the number of results returned","name":"limit","paramType":"query","required":false},{"allowMultiple":false,"allowableValues":{"valueType":"LIST","values":["filename","path","modified"]},"dataType":"string","description":"Data key to sort on.","name":"sort_key","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","defaultValue":"asc","description":"One of \"asc\" or \"desc\"","name":"sort_dir","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"The ETag header value from previous request","name":"If-None-Match","paramType":"header","required":false}],"responseClass":"void","summary":"Returns list of details about associated attachments"},{"errorResponses":[{"code":401,"reason":"Invalid user session"},{"code":403,"reason":"User does not have required permission"},{"code":500,"reason":"Internal server error"}],"httpMethod":"POST","nickname":"AttachmentListHandler_post","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_WRITE', 'DATA_STORE_WRITE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_id' in path.","name":"alert_id","paramType":"path","required":true}],"responseClass":"void","summary":"Upload a new attachment for the alert"}],"path":"/alert/{alert_id}/attachment"},{"description":"\n   Handler that allows removing an attachment from an alert.\n   ","operations":[{"errorResponses":[{"code":401,"reason":"Invalid user session"},{"code":403,"reason":"User does not have required permission"},{"code":500,"reason":"Internal server error"}],"httpMethod":"DELETE","nickname":"AttachmentHandler_delete","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_WRITE', 'DATA_STORE_WRITE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_id' in path.","name":"alert_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'attachment_id' in path.","name":"attachment_id","paramType":"path","required":true}],"responseClass":"void","summary":"Remove the given attachment from the alert"}],"path":"/alert/{alert_id}/attachment/{attachment_id}"},{"description":"\n   List handler for the critical info groups on an Alert.\n   ","operations":[{"errorResponses":[{"code":304,"reason":"Resource has not changed (If-None-Match)"},{"code":401,"reason":"Invalid user session"},{"code":403,"reason":"User does not have required permission"},{"code":500,"reason":"Internal server error"}],"httpMethod":"GET","nickname":"AlertCriticalGroupListHandler_get","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_READ']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_id' in path.","name":"alert_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"The ETag header value from previous request","name":"If-None-Match","paramType":"header","required":false}],"responseClass":"void","summary":"Returns list of critical info groups for an alert"}],"path":"/alert/{alert_id}/critical_info"},{"description":"\n   Item handler for the critical info groups on an Alert.\n   ","operations":[{"errorResponses":[{"code":304,"reason":"Resource has not changed (If-None-Match)"},{"code":401,"reason":"Invalid user session"},{"code":403,"reason":"User does not have required permission"},{"code":500,"reason":"Internal server error"}],"httpMethod":"GET","nickname":"AlertCriticalGroupItemHandler_get","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_READ']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_id' in path.","name":"alert_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'group_id' in path.","name":"group_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"The ETag header value from previous request","name":"If-None-Match","paramType":"header","required":false}],"responseClass":"void","summary":""},{"errorResponses":[{"code":401,"reason":"Invalid user session"},{"code":403,"reason":"User does not have required permission"},{"code":500,"reason":"Internal server error"}],"httpMethod":"DELETE","nickname":"AlertCriticalGroupItemHandler_delete","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_WRITE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_id' in path.","name":"alert_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'group_id' in path.","name":"group_id","paramType":"path","required":true}],"responseClass":"void","summary":""}],"path":"/alert/{alert_id}/critical_info/{group_id}"},{"description":"\n   Item handler for a single info item within an alert critical info group.\n\n   @note: We currently only support PATCH. This is to allow fine-grained changes to info items.\n   ","operations":[{"errorResponses":[{"code":401,"reason":"Invalid user session"},{"code":403,"reason":"User does not have required permission"},{"code":500,"reason":"Internal server error"}],"httpMethod":"PATCH","nickname":"AlertCriticalInfoItemHandler_patch","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_WRITE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_id' in path.","name":"alert_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'group_id' in path.","name":"group_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'item_id' in path.","name":"item_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Body of the request.","name":"body","paramType":"body","required":true}],"responseClass":"void","summary":""}],"path":"/alert/{alert_id}/critical_info/{group_id}/item/{item_id}"},{"description":"\n   REST handler which for a given alert will calculate incidents which might be\n   good to associate with.\n   ","operations":[{"errorResponses":[{"code":304,"reason":"Resource has not changed (If-None-Match)"},{"code":401,"reason":"Invalid user session"},{"code":403,"reason":"User does not have required permission"},{"code":500,"reason":"Internal server error"}],"httpMethod":"GET","nickname":"AlertRecommenderHandler_get","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_READ', 'INCIDENT_READ']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_id' in path.","name":"alert_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":null,"name":"limit","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","defaultValue":0.3,"description":null,"name":"threshold","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"The ETag header value from previous request","name":"If-None-Match","paramType":"header","required":false}],"responseClass":"void","summary":""}],"path":"/alert/{alert_id}/recommender"},{"description":"Handler that exposes query and creation methods for AlertFilterResource objects.","operations":[{"errorResponses":[{"code":200,"reason":"Success"},{"code":304,"reason":"Resource has not changed (If-None-Match)"},{"code":400,"reason":"Invalid sort key, sort direction, or region."},{"code":401,"reason":"Invalid user session"},{"code":403,"reason":"User does not have required permission"},{"code":500,"reason":"Internal server error"}],"httpMethod":"GET","nickname":"AlertFilterListHandler_get","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_READ']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Index of the first item to return.","name":"offset","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Maximum number of items to return.","name":"limit","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"List of item URIs to query instead of querying all items.","name":"item_uris","paramType":"query","required":false},{"allowMultiple":false,"dataType":"boolean","description":"When set, fill in the `total` field in the response body. The `total` field indicates how many records matched the query, disregarding the limit and offset.To reduce computation costs, the maximum value for the `total` will be limited to to `limit + offset` unless a `max_total` parameter value is also included.","name":"include_total","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Sets the maximum value for the `total` field when the `include_total` parameter is also set on the query ","name":"max_total","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"List of data group uris to restrict results to.","name":"data_group_uris","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Text to search against the items.","name":"search_text","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"GeoJSON point to sort by distance from. ex: {\"type\":\"Point\",\"coordinates\":[-77.0,39.0]}","name":"sort_point","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"GeoJSON region to filter results by intersection. ex: {\"type\":\"Polygon\",\"coordinates\":[[[-77.0,39.0],[-77.0,39.0],[-77.0,39.0],[-77.0,39.0]]]}","name":"region","paramType":"query","required":false},{"allowMultiple":false,"dataType":"boolean","description":"If true, a region filter will also return results that have no location set.","name":"include_locationless","paramType":"query","required":false},{"allowMultiple":false,"allowableValues":{"valueType":"LIST","values":["title"]},"dataType":"string","description":"Key to sort items on.","name":"sort_key","paramType":"query","required":false},{"allowMultiple":false,"allowableValues":{"valueType":"LIST","values":["asc","desc"]},"dataType":"string","defaultValue":"asc","description":"Direction of the sort.","name":"sort_dir","paramType":"query","required":false},{"allowMultiple":false,"allowableValues":{"valueType":"LIST","values":["title"]},"dataType":"string","description":"Secondary key to sort items on.","name":"secondary_sort_key","paramType":"query","required":false},{"allowMultiple":false,"allowableValues":{"valueType":"LIST","values":["asc","desc"]},"dataType":"string","defaultValue":"asc","description":"Direction of the secondary sort.","name":"secondary_sort_dir","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"The ETag header value from previous request","name":"If-None-Match","paramType":"header","required":false}],"responseClass":"void","summary":"Return the list of AlertFilterResource objects that match the provided filters."},{"errorResponses":[{"code":201,"reason":"New resource created, URI in Location response header."},{"code":400,"reason":"Invalid resource specified - cannot save to database."},{"code":401,"reason":"Invalid user session"},{"code":403,"reason":"User does not have required permission"},{"code":500,"reason":"Internal server error"}],"httpMethod":"POST","nickname":"AlertFilterListHandler_post","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_WRITE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Body of the request.  Must contain the JSON for a AlertFilterResource object.  See the GET handler for an example of the format of the body.","name":"body","paramType":"body","required":true}],"responseClass":"void","summary":"Creates a new AlertFilterResource object for the given data."}],"path":"/alert_filter"},{"description":"Handler that exposes update and deletion methods for AlertFilterResource objects.","operations":[{"errorResponses":[{"code":200,"reason":"Success"},{"code":304,"reason":"Resource has not changed (If-None-Match)"},{"code":401,"reason":"User is not logged in."},{"code":403,"reason":"User does not have the required permissions."},{"code":404,"reason":"Invalid resource specified - cannot be found."},{"code":500,"reason":"Internal server error"}],"httpMethod":"GET","nickname":"AlertFilterItemHandler_get","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_READ']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_filter_id' in path.","name":"alert_filter_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"The ETag header value from previous request","name":"If-None-Match","paramType":"header","required":false}],"responseClass":"void","summary":"Return the AlertFilterResource object for this URI."},{"errorResponses":[{"code":200,"reason":"Success"},{"code":400,"reason":"Bad format in request."},{"code":401,"reason":"User is not logged in."},{"code":403,"reason":"User does not have the required permissions."},{"code":404,"reason":"Invalid resource specified - cannot be found."},{"code":500,"reason":"Internal server error"}],"httpMethod":"PUT","nickname":"AlertFilterItemHandler_put","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_WRITE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_filter_id' in path.","name":"alert_filter_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Body of the request.  Must contain the JSON for a AlertFilterResource object.  See the GET handler for an example of the format of the body.","name":"body","paramType":"body","required":true}],"responseClass":"void","summary":"Overwrite the existing AlertFilterResource object with the given data."},{"errorResponses":[{"code":200,"reason":"Success"},{"code":400,"reason":"Bad format in request."},{"code":401,"reason":"User is not logged in."},{"code":403,"reason":"User does not have the required permissions."},{"code":404,"reason":"Invalid resource specified - cannot be found."},{"code":500,"reason":"Internal server error"}],"httpMethod":"PATCH","nickname":"AlertFilterItemHandler_patch","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_WRITE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_filter_id' in path.","name":"alert_filter_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Body of the request.  Must contain partial JSON for a AlertFilterResource object.  See the GET handler for an example of the format of the body.","name":"body","paramType":"body","required":true}],"responseClass":"void","summary":"Update the existing AlertFilterResource object with the given dictionary."},{"errorResponses":[{"code":200,"reason":"Success"},{"code":401,"reason":"User is not logged in."},{"code":403,"reason":"User does not have the required permissions."},{"code":404,"reason":"Invalid resource specified - cannot be found."},{"code":500,"reason":"Internal server error"}],"httpMethod":"DELETE","nickname":"AlertFilterItemHandler_delete","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_WRITE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_filter_id' in path.","name":"alert_filter_id","paramType":"path","required":true}],"responseClass":"void","summary":"Delete the existing AlertFilterResource object with the given URI."}],"path":"/alert_filter/{alert_filter_id}"},{"description":"Handler that exposes query and creation methods for AlertFilterRuleResource objects.","operations":[{"errorResponses":[{"code":200,"reason":"Success"},{"code":400,"reason":"Invalid sort key, sort direction, or region."},{"code":401,"reason":"Invalid user session"},{"code":403,"reason":"User does not have required permission"},{"code":500,"reason":"Internal server error"}],"httpMethod":"GET","nickname":"AlertFilterRuleListHandler_get","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_READ']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_filter_id' in path.","name":"alert_filter_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Index of the first item to return.","name":"offset","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"Maximum number of items to return.","name":"limit","paramType":"query","required":false},{"allowMultiple":false,"allowableValues":{"valueType":"LIST","values":[]},"dataType":"string","description":"Key to sort items on.","name":"sort_key","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","defaultValue":"asc","description":"Direction of the sort.","name":"sort_dir","paramType":"query","required":false},{"allowMultiple":false,"allowableValues":{"valueType":"LIST","values":[]},"dataType":"string","description":"Secondary key to sort items on.","name":"secondary_sort_key","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","defaultValue":"asc","description":"Direction of the secondary sort.","name":"secondary_sort_dir","paramType":"query","required":false},{"allowMultiple":false,"dataType":"string","description":"The ETag header value from previous request","name":"If-None-Match","paramType":"header","required":false}],"responseClass":"void","summary":"Return the list of AlertFilterRuleResource objects that match the provided filters."},{"errorResponses":[{"code":201,"reason":"New resource created, URI in Location response header."},{"code":400,"reason":"Invalid resource specified - cannot save to database."},{"code":401,"reason":"Invalid user session"},{"code":403,"reason":"User does not have required permission"},{"code":500,"reason":"Internal server error"}],"httpMethod":"POST","nickname":"AlertFilterRuleListHandler_post","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_WRITE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_filter_id' in path.","name":"alert_filter_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Body of the request.  Must contain the JSON for a AlertFilterRuleResource object.  See the GET handler for an example of the format of the body.","name":"body","paramType":"body","required":true}],"responseClass":"void","summary":"Creates a new AlertFilterRuleResource object for the given data."}],"path":"/alert_filter/{alert_filter_id}/rule"},{"description":"Handler that exposes update and deletion methods for AlertFilterRuleResource objects.","operations":[{"errorResponses":[{"code":200,"reason":"Success"},{"code":401,"reason":"User is not logged in."},{"code":403,"reason":"User does not have the required permissions."},{"code":404,"reason":"Invalid resource specified - cannot be found."},{"code":500,"reason":"Internal server error"}],"httpMethod":"GET","nickname":"AlertFilterRuleListItemHandler_get","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_READ']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_filter_id' in path.","name":"alert_filter_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'rule_id' in path.","name":"rule_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"The ETag header value from previous request","name":"If-None-Match","paramType":"header","required":false}],"responseClass":"void","summary":"Return the AlertFilterRuleResource object for this URI."},{"errorResponses":[{"code":200,"reason":"Success"},{"code":400,"reason":"Bad format in request."},{"code":401,"reason":"User is not logged in."},{"code":403,"reason":"User does not have the required permissions."},{"code":404,"reason":"Invalid resource specified - cannot be found."},{"code":500,"reason":"Internal server error"}],"httpMethod":"PUT","nickname":"AlertFilterRuleListItemHandler_put","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_WRITE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_filter_id' in path.","name":"alert_filter_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'rule_id' in path.","name":"rule_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Body of the request.  Must contain the JSON for a AlertFilterRuleResource object.  See the GET handler for an example of the format of the body.","name":"body","paramType":"body","required":true}],"responseClass":"void","summary":"Overwrite the existing AlertFilterRuleResource object with the given data."},{"errorResponses":[{"code":200,"reason":"Success"},{"code":400,"reason":"Bad format in request."},{"code":401,"reason":"User is not logged in."},{"code":403,"reason":"User does not have the required permissions."},{"code":404,"reason":"Invalid resource specified - cannot be found."},{"code":500,"reason":"Internal server error"}],"httpMethod":"PATCH","nickname":"AlertFilterRuleListItemHandler_patch","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_WRITE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_filter_id' in path.","name":"alert_filter_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'rule_id' in path.","name":"rule_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Body of the request.  Must contain partial JSON for a AlertFilterRuleResource object.  See the GET handler for an example of the format of the body.","name":"body","paramType":"body","required":true}],"responseClass":"void","summary":"Update the existing AlertFilterRuleResource object with the given dictionary."},{"errorResponses":[{"code":200,"reason":"Success"},{"code":401,"reason":"User is not logged in."},{"code":403,"reason":"User does not have the required permissions."},{"code":404,"reason":"Invalid resource specified - cannot be found."},{"code":500,"reason":"Internal server error"}],"httpMethod":"DELETE","nickname":"AlertFilterRuleListItemHandler_delete","notes":"<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_WRITE']</div>","parameters":[{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'alert_filter_id' in path.","name":"alert_filter_id","paramType":"path","required":true},{"allowMultiple":false,"dataType":"string","description":"Value of type 'uuid' to use for 'rule_id' in path.","name":"rule_id","paramType":"path","required":true}],"responseClass":"void","summary":"Delete the existing AlertFilterRuleResource object with the given URI."}],"path":"/alert_filter/{alert_filter_id}/rule/{rule_id}"}],"basePath":"https://tstdtacserv.tstruh.911.gov.sa","models":{},"resourcePath":"/api/api_docs/alert","swaggerVersion":"1.1"}
+{
+  "apiVersion": "0.1",
+  "apis": [
+    {
+      "description": "Handler that exposes query and creation methods for Alert objects.",
+      "operations": [
+        {
+          "errorResponses": [
+            {
+              "code": 200,
+              "reason": "Success"
+            },
+            {
+              "code": 304,
+              "reason": "Resource has not changed (If-None-Match)"
+            },
+            {
+              "code": 400,
+              "reason": "Invalid sort key or sort direction."
+            },
+            {
+              "code": 401,
+              "reason": "Invalid user session"
+            },
+            {
+              "code": 403,
+              "reason": "User does not have required permission"
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "GET",
+          "nickname": "AlertListHandler_get",
+          "notes": "<div class=\"markdown\">Examples:\n\nRetrieve list of alerts with keywords \"fire\"\n\n`GET /alert?keywords=fire`\n\nRetrieve list of alerts near point (10, 10)\n\n`GET /alert?geom={\"type\":\"Circle\",\"coordinates\":[10,10],\"radius\":0.5}`\n\n\nRequires permissions: ['ALERT_READ']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "defaultValue": 500,
+              "description": "Maximum number of items to return.",
+              "name": "limit",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Index of the first item to return.",
+              "name": "offset",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "List of item URIs to query instead of querying all items.",
+              "name": "item_uris",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "boolean",
+              "description": "When set, fill in the `total` field in the response body. The `total` field indicates how many records matched the query, disregarding the limit and offset.To reduce computation costs, the maximum value for the `total` will be limited to to `limit + offset` unless a `max_total` parameter value is also included.",
+              "name": "include_total",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Sets the maximum value for the `total` field when the `include_total` parameter is also set on the query ",
+              "name": "max_total",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "\n                             Keyword filter for searching an alert's title,\n                             description, source name and types.\n                             ",
+              "name": "keyword",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Filter on read state. (True, true, 1, False, false, 0)",
+              "name": "is_read",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Filter on archived state. (True, true, 1, False, false, 0)",
+              "name": "is_archived",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Geospatial filter.\n      Geometery is passed in and out using GeoJSON with the Circle type extension.\n\n      http://geojson.org/geojson-spec.html\n      https://github.com/GeoJSONWG/geojson-spec/wiki/Proposal---Circles-and-Ellipses-Geoms\n      ",
+              "name": "region",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Filter on alert type.",
+              "name": "alert_types",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Alerts whose end time is greater or equal to the given time. Datetime is represented in iso8601 format. (ex: '2011-06-24T09:55:08.110000Z') ",
+              "name": "ends_after",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Alerts whose begin time is less than the given time. Datetime is represented in iso8601 format. (ex: '2011-06-24T09:55:08.110000Z') ",
+              "name": "begins_before",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Alerts that have been modified since the given time. Datetime is represented in iso8601 format. (ex: '2011-06-24T09:55:08.110000Z') ",
+              "name": "modified_since",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Alerts with priority less than this priority.",
+              "name": "max_priority",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Alerts with priority greater than or equal to\n                                           this priority.",
+              "name": "min_priority",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Data group URIs to restrict results to.",
+              "name": "data_group_uris",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Keyword filter for an alert's author.",
+              "name": "author",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Keyword filter for an alert's\n                                                  source name.",
+              "name": "source",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Keyword filter for an alert's\n                                                  source id.",
+              "name": "source_id",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Keyword filter for an alert's\n                                                  id in the source system.",
+              "name": "source_alert_id",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "",
+              "name": "filter_profile_uris",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "allowableValues": {
+                "valueType": "LIST",
+                "values": [
+                  "asc",
+                  "desc"
+                ]
+              },
+              "dataType": "string",
+              "defaultValue": "asc",
+              "description": null,
+              "name": "sort_dir",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "allowableValues": {
+                "valueType": "LIST",
+                "values": [
+                  "title",
+                  "source_name",
+                  "source_alert_id",
+                  "begin_time",
+                  "end_time",
+                  "priority",
+                  "read_state"
+                ]
+              },
+              "dataType": "string",
+              "description": null,
+              "name": "sort_key",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "allowableValues": {
+                "valueType": "LIST",
+                "values": [
+                  "title",
+                  "source_name",
+                  "source_alert_id",
+                  "begin_time",
+                  "end_time",
+                  "priority",
+                  "read_state"
+                ]
+              },
+              "dataType": "string",
+              "description": null,
+              "name": "secondary_sort_key",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "allowableValues": {
+                "valueType": "LIST",
+                "values": [
+                  "asc",
+                  "desc"
+                ]
+              },
+              "dataType": "string",
+              "description": null,
+              "name": "secondary_sort_dir",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "boolean",
+              "description": "If true, a region filter will also return alerts that have no location set.",
+              "name": "include_locationless",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "The ETag header value from previous request",
+              "name": "If-None-Match",
+              "paramType": "header",
+              "required": false
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Return the list of AlertResource objects that match the provided filters."
+        },
+        {
+          "errorResponses": [
+            {
+              "code": 201,
+              "reason": "New resource created, URI in Location response header."
+            },
+            {
+              "code": 400,
+              "reason": "Invalid resource specified - cannot save to database."
+            },
+            {
+              "code": 401,
+              "reason": "Invalid user session"
+            },
+            {
+              "code": 403,
+              "reason": "User does not have required permission"
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "POST",
+          "nickname": "AlertListHandler_post",
+          "notes": "<div class=\"markdown\">POST'ing to this URI creates a new alert containing the data specified.\nThe format for the body of the POST is identical to the GET response but any field\nmay be omited.\n\nNOTE: If setting `priority`, then `priority_override` must be set `true`.\n\nExample:\n\n```javascript\n{\n   \"__type\": \"alerts.alert_resource\",\n   \"title\": \"Suspicious Package\",\n   \"description\": \"There was a report of a suspicious package.\",\n   \"author\": \"John Smith\",\n   \"begin_time\": \"2014-09-22T09:30:00Z\",\n   \"end_time\": \"2014-09-22T09:30:00Z\",\n   \"source_id\": \"unique_id_for_feed\",\n   \"source_name\": \"Alert Feed A\",\n   \"source_alert_id\": \"unique_id_for_alert\",\n   \"priority\": 0,\n   \"priority_override\": false,\n   \"location\": {\n      \"__type\": \"location_type.location\",\n      \"geom\": {\n         \"coordinates\": [10.0,0.0],\n         \"type\": \"Point\"\n      },\n      \"title\": \"45th and Oak St\"\n   },\n   \"types\": [\n      {\"uri\": \"/alert_type/00000000-0000-0000-0000-000000000008\"}\n   ]\n}\n```\n\n\nRequires permissions: ['ALERT_CREATE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Body of the request.  Must contain the JSON for a AlertResource object.  See the GET handler for an example of the format of the body.",
+              "name": "body",
+              "paramType": "body",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Creates a new AlertResource object for the given data."
+        }
+      ],
+      "path": "/alert"
+    },
+    {
+      "description": "\n   Archives all alerts the user has access to.\n   ",
+      "operations": [
+        {
+          "errorResponses": [
+            {
+              "code": 401,
+              "reason": "Invalid user session"
+            },
+            {
+              "code": 403,
+              "reason": "User does not have required permission"
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "POST",
+          "nickname": "ArchiveAllHandler_post",
+          "notes": "<div class=\"markdown\">Body must be of the form ``{\"item_uris\" : [list of alert uris...]}``.\n\n\nRequires permissions: ['ALERT_ARCHIVE_ALL']</div>",
+          "parameters": [],
+          "responseClass": "void",
+          "summary": "Archive a specific set of alerts."
+        }
+      ],
+      "path": "/alert/archive_all"
+    },
+    {
+      "description": "\n   Alert feed endpoint used for 3rd party integrations. It handles a stream of\n   alert data which could be for an existing alert or a new alert. For each\n   resource that we receive we first check to see if there is an existing alert\n   with a matching source and source ID.\n   ",
+      "operations": [
+        {
+          "errorResponses": [
+            {
+              "code": 200,
+              "reason": "Existing alert was updated"
+            },
+            {
+              "code": 201,
+              "reason": "New alert was created"
+            },
+            {
+              "code": 401,
+              "reason": "Invalid user session"
+            },
+            {
+              "code": 403,
+              "reason": "User does not have required permission"
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "POST",
+          "nickname": "AlertFeedHandler_post",
+          "notes": "<div class=\"markdown\">This endpoint is used for integrating external alert feeds. Alerts can\nbe sent without taking into account if they are already known. If an\nexisting alert is found with a matching source_id and source_alert_id it\nis updated. Otherwise a new alert is created. In both cases the response\nLocation header is set to the relative canonical alert URI. The source_name\nvalue can be specified to give the source a human readable name.\n\nNOTE: The source_id, source_name and source_alert_id fields are required.\nNOTE: If setting priority, then priority_override must be set true.\n\nExample:\n\n```javascript\n{\n   \"__type\": \"alerts.alert_resource\",\n   \"title\": \"Suspicious Package\",\n   \"description\": \"There was a report of a suspicious package.\",\n   \"author\": \"John Smith\",\n   \"begin_time\": \"2014-09-22T09:30:00Z\",\n   \"end_time\": \"2014-09-22T09:30:00Z\",\n   \"source_id\": \"some_data_feed\",\n   \"source_name\": \"Some Data Feed\",\n   \"source_alert_id\": \"123456\",\n   \"priority\": 0,\n   \"priority_override\": false,\n   \"location\": {\n      \"__type\": \"location_type.location\",\n      \"geom\": {\n         \"coordinates\": [10.0,0.0],\n         \"type\": \"Point\"\n      },\n      \"title\": \"45th and Oak St\"\n   },\n   \"types\": [\n      {\"uri\": \"/alert_type/00000000-0000-0000-0000-000000000008\"}\n   ]\n}\n```\n\n\nRequires permissions: ['ALERT_CREATE', 'ALERT_WRITE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Body of the request.",
+              "name": "body",
+              "paramType": "body",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Add or update an alert depending on its source_id and source_alert_id."
+        }
+      ],
+      "path": "/alert/feed"
+    },
+    {
+      "description": "Handler that exposes update and deletion methods for Alert objects.",
+      "operations": [
+        {
+          "errorResponses": [
+            {
+              "code": 200,
+              "reason": "Success"
+            },
+            {
+              "code": 304,
+              "reason": "Resource has not changed (If-None-Match)"
+            },
+            {
+              "code": 401,
+              "reason": "User is not logged in."
+            },
+            {
+              "code": 403,
+              "reason": "User does not have the required permissions."
+            },
+            {
+              "code": 404,
+              "reason": "Invalid resource specified - cannot be found."
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "GET",
+          "nickname": "AlertHandler_get",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_READ']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_id' in path.",
+              "name": "alert_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "The ETag header value from previous request",
+              "name": "If-None-Match",
+              "paramType": "header",
+              "required": false
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Return the AlertResource object for this URI."
+        },
+        {
+          "errorResponses": [
+            {
+              "code": 200,
+              "reason": "Success"
+            },
+            {
+              "code": 400,
+              "reason": "Bad format in request."
+            },
+            {
+              "code": 401,
+              "reason": "User is not logged in."
+            },
+            {
+              "code": 403,
+              "reason": "User does not have the required permissions."
+            },
+            {
+              "code": 404,
+              "reason": "Invalid resource specified - cannot be found."
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "PUT",
+          "nickname": "AlertHandler_put",
+          "notes": "<div class=\"markdown\">Overrides all fields for the given alert.\n\nNOTE: If setting `priority`, then `priority_override` must be set `true`.\n\nExample:\n\n```javascript\n{\n   \"__type\": \"alerts.alert_resource\",\n   \"title\": \"Suspicious Package\",\n   \"description\": \"There was a report of a suspicious package.\",\n   \"author\": \"John Smith\",\n   \"begin_time\": \"2014-09-22T09:30:00Z\",\n   \"end_time\": \"2014-09-22T09:30:00Z\",\n   \"source_id\": \"unique_id_for_feed\",\n   \"source_name\": \"Alert Feed A\",\n   \"source_alert_id\": \"unique_id_for_alert\",\n   \"priority\": 0,\n   \"priority_override\": false,\n   \"location\": {\n      \"__type\": \"location_type.location\",\n      \"geom\": {\n         \"coordinates\": [10.0,0.0],\n         \"type\": \"Point\"\n      },\n      \"title\": \"45th and Oak St\"\n   },\n   \"types\": [\n      {\"uri\": \"/alert_type/00000000-0000-0000-0000-000000000008\"}\n   ]\n}\n```\n\n\nRequires permissions: ['ALERT_WRITE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_id' in path.",
+              "name": "alert_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Body of the request.  Must contain the JSON for a AlertResource object.  See the GET handler for an example of the format of the body.",
+              "name": "body",
+              "paramType": "body",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Overwrite the existing AlertResource object with the given data."
+        },
+        {
+          "errorResponses": [
+            {
+              "code": 200,
+              "reason": "Success"
+            },
+            {
+              "code": 400,
+              "reason": "Bad format in request."
+            },
+            {
+              "code": 401,
+              "reason": "User is not logged in."
+            },
+            {
+              "code": 403,
+              "reason": "User does not have the required permissions."
+            },
+            {
+              "code": 404,
+              "reason": "Invalid resource specified - cannot be found."
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "PATCH",
+          "nickname": "AlertHandler_patch",
+          "notes": "<div class=\"markdown\">Only fields that are modified should be included.\n\nNOTE: If setting `priority`, then `priority_override` must be set `true`.\n\nExample:\n\n```javascript\n{\n   \"title\": \"New Title\",\n   \"description\": \"Updated description\"\n}\n```\n\n\nRequires permissions: ['ALERT_WRITE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_id' in path.",
+              "name": "alert_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Body of the request.  Must contain partial JSON for a AlertResource object.  See the GET handler for an example of the format of the body.",
+              "name": "body",
+              "paramType": "body",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Update the existing AlertResource object with the given dictionary."
+        },
+        {
+          "errorResponses": [
+            {
+              "code": 200,
+              "reason": "Success"
+            },
+            {
+              "code": 401,
+              "reason": "User is not logged in."
+            },
+            {
+              "code": 403,
+              "reason": "User does not have the required permissions."
+            },
+            {
+              "code": 404,
+              "reason": "Invalid resource specified - cannot be found."
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "DELETE",
+          "nickname": "AlertHandler_delete",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_DELETE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_id' in path.",
+              "name": "alert_id",
+              "paramType": "path",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Delete the existing AlertResource object with the given URI."
+        }
+      ],
+      "path": "/alert/{alert_id}"
+    },
+    {
+      "description": "\n   Handler that provides access to an alert's attachments.\n   ",
+      "operations": [
+        {
+          "errorResponses": [
+            {
+              "code": 304,
+              "reason": "Resource has not changed (If-None-Match)"
+            },
+            {
+              "code": 401,
+              "reason": "Invalid user session"
+            },
+            {
+              "code": 403,
+              "reason": "User does not have required permission"
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "GET",
+          "nickname": "AttachmentListHandler_get",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_READ', 'DATA_STORE_READ']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_id' in path.",
+              "name": "alert_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Matching md5sum for the request objects",
+              "name": "md5sum",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Offset the starting position of the search",
+              "name": "offset",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Limit the number of results returned",
+              "name": "limit",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "allowableValues": {
+                "valueType": "LIST",
+                "values": [
+                  "filename",
+                  "path",
+                  "modified"
+                ]
+              },
+              "dataType": "string",
+              "description": "Data key to sort on.",
+              "name": "sort_key",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "defaultValue": "asc",
+              "description": "One of \"asc\" or \"desc\"",
+              "name": "sort_dir",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "The ETag header value from previous request",
+              "name": "If-None-Match",
+              "paramType": "header",
+              "required": false
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Returns list of details about associated attachments"
+        },
+        {
+          "errorResponses": [
+            {
+              "code": 401,
+              "reason": "Invalid user session"
+            },
+            {
+              "code": 403,
+              "reason": "User does not have required permission"
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "POST",
+          "nickname": "AttachmentListHandler_post",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_WRITE', 'DATA_STORE_WRITE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_id' in path.",
+              "name": "alert_id",
+              "paramType": "path",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Upload a new attachment for the alert"
+        }
+      ],
+      "path": "/alert/{alert_id}/attachment"
+    },
+    {
+      "description": "\n   Handler that allows removing an attachment from an alert.\n   ",
+      "operations": [
+        {
+          "errorResponses": [
+            {
+              "code": 401,
+              "reason": "Invalid user session"
+            },
+            {
+              "code": 403,
+              "reason": "User does not have required permission"
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "DELETE",
+          "nickname": "AttachmentHandler_delete",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_WRITE', 'DATA_STORE_WRITE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_id' in path.",
+              "name": "alert_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'attachment_id' in path.",
+              "name": "attachment_id",
+              "paramType": "path",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Remove the given attachment from the alert"
+        }
+      ],
+      "path": "/alert/{alert_id}/attachment/{attachment_id}"
+    },
+    {
+      "description": "\n   List handler for the critical info groups on an Alert.\n   ",
+      "operations": [
+        {
+          "errorResponses": [
+            {
+              "code": 304,
+              "reason": "Resource has not changed (If-None-Match)"
+            },
+            {
+              "code": 401,
+              "reason": "Invalid user session"
+            },
+            {
+              "code": 403,
+              "reason": "User does not have required permission"
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "GET",
+          "nickname": "AlertCriticalGroupListHandler_get",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_READ']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_id' in path.",
+              "name": "alert_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "The ETag header value from previous request",
+              "name": "If-None-Match",
+              "paramType": "header",
+              "required": false
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Returns list of critical info groups for an alert"
+        }
+      ],
+      "path": "/alert/{alert_id}/critical_info"
+    },
+    {
+      "description": "\n   Item handler for the critical info groups on an Alert.\n   ",
+      "operations": [
+        {
+          "errorResponses": [
+            {
+              "code": 304,
+              "reason": "Resource has not changed (If-None-Match)"
+            },
+            {
+              "code": 401,
+              "reason": "Invalid user session"
+            },
+            {
+              "code": 403,
+              "reason": "User does not have required permission"
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "GET",
+          "nickname": "AlertCriticalGroupItemHandler_get",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_READ']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_id' in path.",
+              "name": "alert_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'group_id' in path.",
+              "name": "group_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "The ETag header value from previous request",
+              "name": "If-None-Match",
+              "paramType": "header",
+              "required": false
+            }
+          ],
+          "responseClass": "void",
+          "summary": ""
+        },
+        {
+          "errorResponses": [
+            {
+              "code": 401,
+              "reason": "Invalid user session"
+            },
+            {
+              "code": 403,
+              "reason": "User does not have required permission"
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "DELETE",
+          "nickname": "AlertCriticalGroupItemHandler_delete",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_WRITE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_id' in path.",
+              "name": "alert_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'group_id' in path.",
+              "name": "group_id",
+              "paramType": "path",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": ""
+        }
+      ],
+      "path": "/alert/{alert_id}/critical_info/{group_id}"
+    },
+    {
+      "description": "\n   Item handler for a single info item within an alert critical info group.\n\n   @note: We currently only support PATCH. This is to allow fine-grained changes to info items.\n   ",
+      "operations": [
+        {
+          "errorResponses": [
+            {
+              "code": 401,
+              "reason": "Invalid user session"
+            },
+            {
+              "code": 403,
+              "reason": "User does not have required permission"
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "PATCH",
+          "nickname": "AlertCriticalInfoItemHandler_patch",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_WRITE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_id' in path.",
+              "name": "alert_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'group_id' in path.",
+              "name": "group_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'item_id' in path.",
+              "name": "item_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Body of the request.",
+              "name": "body",
+              "paramType": "body",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": ""
+        }
+      ],
+      "path": "/alert/{alert_id}/critical_info/{group_id}/item/{item_id}"
+    },
+    {
+      "description": "\n   REST handler which for a given alert will calculate incidents which might be\n   good to associate with.\n   ",
+      "operations": [
+        {
+          "errorResponses": [
+            {
+              "code": 304,
+              "reason": "Resource has not changed (If-None-Match)"
+            },
+            {
+              "code": 401,
+              "reason": "Invalid user session"
+            },
+            {
+              "code": 403,
+              "reason": "User does not have required permission"
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "GET",
+          "nickname": "AlertRecommenderHandler_get",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_READ', 'INCIDENT_READ']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_id' in path.",
+              "name": "alert_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": null,
+              "name": "limit",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "defaultValue": 0.3,
+              "description": null,
+              "name": "threshold",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "The ETag header value from previous request",
+              "name": "If-None-Match",
+              "paramType": "header",
+              "required": false
+            }
+          ],
+          "responseClass": "void",
+          "summary": ""
+        }
+      ],
+      "path": "/alert/{alert_id}/recommender"
+    },
+    {
+      "description": "Handler that exposes query and creation methods for AlertFilterResource objects.",
+      "operations": [
+        {
+          "errorResponses": [
+            {
+              "code": 200,
+              "reason": "Success"
+            },
+            {
+              "code": 304,
+              "reason": "Resource has not changed (If-None-Match)"
+            },
+            {
+              "code": 400,
+              "reason": "Invalid sort key, sort direction, or region."
+            },
+            {
+              "code": 401,
+              "reason": "Invalid user session"
+            },
+            {
+              "code": 403,
+              "reason": "User does not have required permission"
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "GET",
+          "nickname": "AlertFilterListHandler_get",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_READ']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Index of the first item to return.",
+              "name": "offset",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Maximum number of items to return.",
+              "name": "limit",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "List of item URIs to query instead of querying all items.",
+              "name": "item_uris",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "boolean",
+              "description": "When set, fill in the `total` field in the response body. The `total` field indicates how many records matched the query, disregarding the limit and offset.To reduce computation costs, the maximum value for the `total` will be limited to to `limit + offset` unless a `max_total` parameter value is also included.",
+              "name": "include_total",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Sets the maximum value for the `total` field when the `include_total` parameter is also set on the query ",
+              "name": "max_total",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "List of data group uris to restrict results to.",
+              "name": "data_group_uris",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Text to search against the items.",
+              "name": "search_text",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "GeoJSON point to sort by distance from. ex: {\"type\":\"Point\",\"coordinates\":[-77.0,39.0]}",
+              "name": "sort_point",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "GeoJSON region to filter results by intersection. ex: {\"type\":\"Polygon\",\"coordinates\":[[[-77.0,39.0],[-77.0,39.0],[-77.0,39.0],[-77.0,39.0]]]}",
+              "name": "region",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "boolean",
+              "description": "If true, a region filter will also return results that have no location set.",
+              "name": "include_locationless",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "allowableValues": {
+                "valueType": "LIST",
+                "values": [
+                  "title"
+                ]
+              },
+              "dataType": "string",
+              "description": "Key to sort items on.",
+              "name": "sort_key",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "allowableValues": {
+                "valueType": "LIST",
+                "values": [
+                  "asc",
+                  "desc"
+                ]
+              },
+              "dataType": "string",
+              "defaultValue": "asc",
+              "description": "Direction of the sort.",
+              "name": "sort_dir",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "allowableValues": {
+                "valueType": "LIST",
+                "values": [
+                  "title"
+                ]
+              },
+              "dataType": "string",
+              "description": "Secondary key to sort items on.",
+              "name": "secondary_sort_key",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "allowableValues": {
+                "valueType": "LIST",
+                "values": [
+                  "asc",
+                  "desc"
+                ]
+              },
+              "dataType": "string",
+              "defaultValue": "asc",
+              "description": "Direction of the secondary sort.",
+              "name": "secondary_sort_dir",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "The ETag header value from previous request",
+              "name": "If-None-Match",
+              "paramType": "header",
+              "required": false
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Return the list of AlertFilterResource objects that match the provided filters."
+        },
+        {
+          "errorResponses": [
+            {
+              "code": 201,
+              "reason": "New resource created, URI in Location response header."
+            },
+            {
+              "code": 400,
+              "reason": "Invalid resource specified - cannot save to database."
+            },
+            {
+              "code": 401,
+              "reason": "Invalid user session"
+            },
+            {
+              "code": 403,
+              "reason": "User does not have required permission"
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "POST",
+          "nickname": "AlertFilterListHandler_post",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_WRITE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Body of the request.  Must contain the JSON for a AlertFilterResource object.  See the GET handler for an example of the format of the body.",
+              "name": "body",
+              "paramType": "body",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Creates a new AlertFilterResource object for the given data."
+        }
+      ],
+      "path": "/alert_filter"
+    },
+    {
+      "description": "Handler that exposes update and deletion methods for AlertFilterResource objects.",
+      "operations": [
+        {
+          "errorResponses": [
+            {
+              "code": 200,
+              "reason": "Success"
+            },
+            {
+              "code": 304,
+              "reason": "Resource has not changed (If-None-Match)"
+            },
+            {
+              "code": 401,
+              "reason": "User is not logged in."
+            },
+            {
+              "code": 403,
+              "reason": "User does not have the required permissions."
+            },
+            {
+              "code": 404,
+              "reason": "Invalid resource specified - cannot be found."
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "GET",
+          "nickname": "AlertFilterItemHandler_get",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_READ']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_filter_id' in path.",
+              "name": "alert_filter_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "The ETag header value from previous request",
+              "name": "If-None-Match",
+              "paramType": "header",
+              "required": false
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Return the AlertFilterResource object for this URI."
+        },
+        {
+          "errorResponses": [
+            {
+              "code": 200,
+              "reason": "Success"
+            },
+            {
+              "code": 400,
+              "reason": "Bad format in request."
+            },
+            {
+              "code": 401,
+              "reason": "User is not logged in."
+            },
+            {
+              "code": 403,
+              "reason": "User does not have the required permissions."
+            },
+            {
+              "code": 404,
+              "reason": "Invalid resource specified - cannot be found."
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "PUT",
+          "nickname": "AlertFilterItemHandler_put",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_WRITE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_filter_id' in path.",
+              "name": "alert_filter_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Body of the request.  Must contain the JSON for a AlertFilterResource object.  See the GET handler for an example of the format of the body.",
+              "name": "body",
+              "paramType": "body",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Overwrite the existing AlertFilterResource object with the given data."
+        },
+        {
+          "errorResponses": [
+            {
+              "code": 200,
+              "reason": "Success"
+            },
+            {
+              "code": 400,
+              "reason": "Bad format in request."
+            },
+            {
+              "code": 401,
+              "reason": "User is not logged in."
+            },
+            {
+              "code": 403,
+              "reason": "User does not have the required permissions."
+            },
+            {
+              "code": 404,
+              "reason": "Invalid resource specified - cannot be found."
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "PATCH",
+          "nickname": "AlertFilterItemHandler_patch",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_WRITE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_filter_id' in path.",
+              "name": "alert_filter_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Body of the request.  Must contain partial JSON for a AlertFilterResource object.  See the GET handler for an example of the format of the body.",
+              "name": "body",
+              "paramType": "body",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Update the existing AlertFilterResource object with the given dictionary."
+        },
+        {
+          "errorResponses": [
+            {
+              "code": 200,
+              "reason": "Success"
+            },
+            {
+              "code": 401,
+              "reason": "User is not logged in."
+            },
+            {
+              "code": 403,
+              "reason": "User does not have the required permissions."
+            },
+            {
+              "code": 404,
+              "reason": "Invalid resource specified - cannot be found."
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "DELETE",
+          "nickname": "AlertFilterItemHandler_delete",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_WRITE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_filter_id' in path.",
+              "name": "alert_filter_id",
+              "paramType": "path",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Delete the existing AlertFilterResource object with the given URI."
+        }
+      ],
+      "path": "/alert_filter/{alert_filter_id}"
+    },
+    {
+      "description": "Handler that exposes query and creation methods for AlertFilterRuleResource objects.",
+      "operations": [
+        {
+          "errorResponses": [
+            {
+              "code": 200,
+              "reason": "Success"
+            },
+            {
+              "code": 400,
+              "reason": "Invalid sort key, sort direction, or region."
+            },
+            {
+              "code": 401,
+              "reason": "Invalid user session"
+            },
+            {
+              "code": 403,
+              "reason": "User does not have required permission"
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "GET",
+          "nickname": "AlertFilterRuleListHandler_get",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_READ']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_filter_id' in path.",
+              "name": "alert_filter_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Index of the first item to return.",
+              "name": "offset",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Maximum number of items to return.",
+              "name": "limit",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "allowableValues": {
+                "valueType": "LIST",
+                "values": []
+              },
+              "dataType": "string",
+              "description": "Key to sort items on.",
+              "name": "sort_key",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "defaultValue": "asc",
+              "description": "Direction of the sort.",
+              "name": "sort_dir",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "allowableValues": {
+                "valueType": "LIST",
+                "values": []
+              },
+              "dataType": "string",
+              "description": "Secondary key to sort items on.",
+              "name": "secondary_sort_key",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "defaultValue": "asc",
+              "description": "Direction of the secondary sort.",
+              "name": "secondary_sort_dir",
+              "paramType": "query",
+              "required": false
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "The ETag header value from previous request",
+              "name": "If-None-Match",
+              "paramType": "header",
+              "required": false
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Return the list of AlertFilterRuleResource objects that match the provided filters."
+        },
+        {
+          "errorResponses": [
+            {
+              "code": 201,
+              "reason": "New resource created, URI in Location response header."
+            },
+            {
+              "code": 400,
+              "reason": "Invalid resource specified - cannot save to database."
+            },
+            {
+              "code": 401,
+              "reason": "Invalid user session"
+            },
+            {
+              "code": 403,
+              "reason": "User does not have required permission"
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "POST",
+          "nickname": "AlertFilterRuleListHandler_post",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_WRITE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_filter_id' in path.",
+              "name": "alert_filter_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Body of the request.  Must contain the JSON for a AlertFilterRuleResource object.  See the GET handler for an example of the format of the body.",
+              "name": "body",
+              "paramType": "body",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Creates a new AlertFilterRuleResource object for the given data."
+        }
+      ],
+      "path": "/alert_filter/{alert_filter_id}/rule"
+    },
+    {
+      "description": "Handler that exposes update and deletion methods for AlertFilterRuleResource objects.",
+      "operations": [
+        {
+          "errorResponses": [
+            {
+              "code": 200,
+              "reason": "Success"
+            },
+            {
+              "code": 401,
+              "reason": "User is not logged in."
+            },
+            {
+              "code": 403,
+              "reason": "User does not have the required permissions."
+            },
+            {
+              "code": 404,
+              "reason": "Invalid resource specified - cannot be found."
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "GET",
+          "nickname": "AlertFilterRuleListItemHandler_get",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_READ']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_filter_id' in path.",
+              "name": "alert_filter_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'rule_id' in path.",
+              "name": "rule_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "The ETag header value from previous request",
+              "name": "If-None-Match",
+              "paramType": "header",
+              "required": false
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Return the AlertFilterRuleResource object for this URI."
+        },
+        {
+          "errorResponses": [
+            {
+              "code": 200,
+              "reason": "Success"
+            },
+            {
+              "code": 400,
+              "reason": "Bad format in request."
+            },
+            {
+              "code": 401,
+              "reason": "User is not logged in."
+            },
+            {
+              "code": 403,
+              "reason": "User does not have the required permissions."
+            },
+            {
+              "code": 404,
+              "reason": "Invalid resource specified - cannot be found."
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "PUT",
+          "nickname": "AlertFilterRuleListItemHandler_put",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_WRITE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_filter_id' in path.",
+              "name": "alert_filter_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'rule_id' in path.",
+              "name": "rule_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Body of the request.  Must contain the JSON for a AlertFilterRuleResource object.  See the GET handler for an example of the format of the body.",
+              "name": "body",
+              "paramType": "body",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Overwrite the existing AlertFilterRuleResource object with the given data."
+        },
+        {
+          "errorResponses": [
+            {
+              "code": 200,
+              "reason": "Success"
+            },
+            {
+              "code": 400,
+              "reason": "Bad format in request."
+            },
+            {
+              "code": 401,
+              "reason": "User is not logged in."
+            },
+            {
+              "code": 403,
+              "reason": "User does not have the required permissions."
+            },
+            {
+              "code": 404,
+              "reason": "Invalid resource specified - cannot be found."
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "PATCH",
+          "nickname": "AlertFilterRuleListItemHandler_patch",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_WRITE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_filter_id' in path.",
+              "name": "alert_filter_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'rule_id' in path.",
+              "name": "rule_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Body of the request.  Must contain partial JSON for a AlertFilterRuleResource object.  See the GET handler for an example of the format of the body.",
+              "name": "body",
+              "paramType": "body",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Update the existing AlertFilterRuleResource object with the given dictionary."
+        },
+        {
+          "errorResponses": [
+            {
+              "code": 200,
+              "reason": "Success"
+            },
+            {
+              "code": 401,
+              "reason": "User is not logged in."
+            },
+            {
+              "code": 403,
+              "reason": "User does not have the required permissions."
+            },
+            {
+              "code": 404,
+              "reason": "Invalid resource specified - cannot be found."
+            },
+            {
+              "code": 500,
+              "reason": "Internal server error"
+            }
+          ],
+          "httpMethod": "DELETE",
+          "nickname": "AlertFilterRuleListItemHandler_delete",
+          "notes": "<div class=\"markdown\">\n\nRequires permissions: ['ALERT_FILTER_WRITE']</div>",
+          "parameters": [
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'alert_filter_id' in path.",
+              "name": "alert_filter_id",
+              "paramType": "path",
+              "required": true
+            },
+            {
+              "allowMultiple": false,
+              "dataType": "string",
+              "description": "Value of type 'uuid' to use for 'rule_id' in path.",
+              "name": "rule_id",
+              "paramType": "path",
+              "required": true
+            }
+          ],
+          "responseClass": "void",
+          "summary": "Delete the existing AlertFilterRuleResource object with the given URI."
+        }
+      ],
+      "path": "/alert_filter/{alert_filter_id}/rule/{rule_id}"
+    }
+  ],
+  "basePath": "https://tstdtacserv.tstruh.911.gov.sa",
+  "models": {},
+  "resourcePath": "/api/api_docs/alert",
+  "swaggerVersion": "1.1"
+}
